@@ -76,57 +76,74 @@ Use Copilot Chat to generate the Jenkinsfile
 
 ### Step 3: Update Jenkinsfile
 
-Use Copilot Chat to generate the Jenkinsfile
+Use Copilot Chat to update the Jenkinsfile
 
 > @workspace lets update it a little jenkinsfile. Repository is: https://github.com/NicolasAndresCalvo/copilot-jenkins-k8s. And Docker Registry to push image is: nicolasandrescalvo/copilot-jenkins-k8s. Docker Credential is a PAT stored it in Jenkins under this ID: DOCKERHUB-PAT
 
-    pipeline {
-        agent any
+![cop-jenkins-2](./images/cop-jenkins-2.png)
 
-        environment {
-            DOCKER_IMAGE = 'nicolasandrescalvo/copilot-jenkins-k8s'
-            IMAGE_TAG = "v1.0.${env.BUILD_ID}"
-            DOCKERHUB_USERNAME = 'nicolasandrescalvo'
-        }
+---
 
-        parameters {
-            string(name: 'BRANCH_NAME', defaultValue: 'main', description: 'Branch to build')
-        }
+## Test App Locally with Docker and Kubernetes
 
-        stages {
-            stage('Checkout Code') {
-                steps {
-                    git branch: "${params.BRANCH_NAME}", url: 'https://github.com/NicolasAndresCalvo/copilot-jenkins-k8s.git'
-                }
-            }
+### Step 1: Build the Docker Image Locally
 
-            stage('Build Docker Image') {
-                steps {
-                    script {
-                        sh "docker build -t ${DOCKER_IMAGE}:${IMAGE_TAG} ."
-                    }
-                }
-            }
+Before deploying to Kubernetes, build the Docker image for the Node.js application.
 
-            stage('Login to Docker Hub') {
-                steps {
-                    script {
-                        withCredentials([string(credentialsId: 'DOCKERHUB-PAT', variable: 'DOCKERHUB_PAT')]) {
-                            sh "echo ${DOCKERHUB_PAT} | docker login -u ${DOCKERHUB_USERNAME} --password-stdin"
-                        }
-                    }
-                }
-            }
+    # Build the Docker image
+    docker build -t my-node-app:latest .
 
-            stage('Push Docker Image') {
-                steps {
-                    script {
-                        sh "docker push ${DOCKER_IMAGE}:${IMAGE_TAG}"
-                    }
-                }
-            }
-        }
-    }
+### Step 2: Load the Docker Image into the Kind Cluster
+
+Since Kind runs Kubernetes inside Docker containers, you need to load the Docker image into the Kind cluster.
+
+    # Load the local Docker image into the Kind cluster
+    kind load docker-image my-node-app:latest --name jenkins
+
+### Step 3: Apply Kubernetes Manifests
+
+Now that the image is loaded into the Kind cluster, apply the Kubernetes manifests to deploy the application.
+
+    # Create a namespace and deploy the application
+    kubectl apply -f k8s.yaml
+
+### Step 4: Verify Deployment
+
+Check the status of the pods to ensure the application is running:
+
+    # Get the status of the pods
+    kubectl get pods -n jenkins-ns
+
+You should see two pods running.
+
+### Step 5: Expose the Application
+
+The service is exposed via **NodePort**. You can access the application on port `30080`.
+
+    # Port forward the service to make it accessible in the browser
+    kubectl port-forward service/my-app-service 8080:80 -n jenkins-ns
+
+You can now access the application in your browser at:
+
+    http://localhost:8080
+
+### Step 6: Verify the Service
+
+To check the status of the service, run the following command:
+
+    kubectl get svc -n jenkins-ns
+
+You should see something like:
+
+    NAME             TYPE       CLUSTER-IP     EXTERNAL-IP   PORT(S)        AGE
+    my-app-service   NodePort   10.96.179.44   <none>        80:30080/TCP   5m
+
+### Cleaning Up
+
+To delete the cluster and clean up resources:
+
+    # Delete the Kind cluster
+    kind delete cluster --name jenkins
 ---
 
 
