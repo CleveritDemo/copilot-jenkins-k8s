@@ -132,24 +132,4 @@ Access the app in your browser at:
 
     http://localhost:8080
 
-
-### Step 6: Verify the Service
-
-To check the status of the service, run the following command:
-
-    kubectl get svc -n jenkins-ns
-
-You should see something like:
-
-    NAME             TYPE       CLUSTER-IP     EXTERNAL-IP   PORT(S)        AGE
-    my-app-service   NodePort   10.96.179.44   <none>        80:30080/TCP   5m
-
-### Cleaning Up
-
-To delete the cluster and clean up resources:
-
-    # Delete the Kind cluster
-    kind delete cluster --name jenkins
 ---
-
-

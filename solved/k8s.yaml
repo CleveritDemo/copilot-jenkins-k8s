@@ -23,7 +23,6 @@ spec:
       containers:
       - name: my-app-container
         image: my-node-app:latest
-        imagePullPolicy: Never
         ports:
         - containerPort: 3000
 ---

@@ -1,38 +1,10 @@
-// pipeline {
-//     agent any
-
-//     environment {
-//         DOCKER_IMAGE = 'copilot-jenkins-k8s'  // Local Docker image name
-//         IMAGE_TAG = "v1.0.${env.BUILD_ID}"  // Tagging image with build number
-//     }
-
-//     stages {
-//         stage('Checkout Code') {
-//             steps {
-//                 // Clone your GitHub repository
-//                 git branch: 'main', url: 'https://github.com/NicolasAndresCalvo/copilot-jenkins-k8s.git'
-//             }
-//         }
-
-//         stage('Build Docker Image') {
-//             steps {
-//                 script {
-//                     // Run the Docker container locally
-//                     sh "docker build -t my-node-app ."
-//                 }
-//             }
-//         // }
-//     }
-// }
-
-
 pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = 'copilot-jenkins-k8s'
+        DOCKER_IMAGE = 'nicolasandrescalvo/copilot-jenkins-k8s'
         IMAGE_TAG = "v1.0.${env.BUILD_ID}"
-        DOCKERHUB_USERNAME = 'your-username'
+        DOCKERHUB_USERNAME = 'nicolasandrescalvo'
     }
 
     parameters {
@@ -70,26 +42,6 @@ pipeline {
                     sh "docker push ${DOCKER_IMAGE}:${IMAGE_TAG}"
                 }
             }
-        }
-
-        stage('Deploy') {
-            steps {
-                script {
-                    sh 'kubectl apply -f k8s.yaml'
-                }
-            }
-        }
-    }
-
-    post {
-        always {
-            cleanWs()
-        }
-        success {
-            echo 'Pipeline completed successfully!'
-        }
-        failure {
-            echo 'Pipeline failed!'
         }
     }
 }
