@@ -11,7 +11,7 @@ metadata:
   labels:
     app: my-app
 spec:
-  replicas: 1  # Number of instances/pods to run
+  replicas: 1
   selector:
     matchLabels:
       app: my-app
@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
       - name: my-app-container
-        image: my-node-app:latest  # Replace with your Docker image
+        image: my-node-app:latest
         imagePullPolicy: Never
         ports:
         - containerPort: 3000
@@ -37,6 +37,6 @@ spec:
     app: my-app
   ports:
     - protocol: TCP
-      port: 80        # Exposed port on the service
-      targetPort: 3000  # Port on the container
-  type: ClusterIP  # Change to NodePort if running locally (for Minikube or Docker Desktop)
+      port: 80
+      targetPort: 3000
+  type: ClusterIP
