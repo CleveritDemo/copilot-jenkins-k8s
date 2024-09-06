@@ -1,0 +1,95 @@
+// pipeline {
+//     agent any
+
+//     environment {
+//         DOCKER_IMAGE = 'copilot-jenkins-k8s'  // Local Docker image name
+//         IMAGE_TAG = "v1.0.${env.BUILD_ID}"  // Tagging image with build number
+//     }
+
+//     stages {
+//         stage('Checkout Code') {
+//             steps {
+//                 // Clone your GitHub repository
+//                 git branch: 'main', url: 'https://github.com/NicolasAndresCalvo/copilot-jenkins-k8s.git'
+//             }
+//         }
+
+//         stage('Build Docker Image') {
+//             steps {
+//                 script {
+//                     // Run the Docker container locally
+//                     sh "docker build -t my-node-app ."
+//                 }
+//             }
+//         // }
+//     }
+// }
+
+
+pipeline {
+    agent any
+
+    environment {
+        DOCKER_IMAGE = 'copilot-jenkins-k8s'
+        IMAGE_TAG = "v1.0.${env.BUILD_ID}"
+        DOCKERHUB_USERNAME = 'your-username'
+    }
+
+    parameters {
+        string(name: 'BRANCH_NAME', defaultValue: 'main', description: 'Branch to build')
+    }
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                git branch: "${params.BRANCH_NAME}", url: 'https://github.com/NicolasAndresCalvo/copilot-jenkins-k8s.git'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    sh "docker build -t ${DOCKER_IMAGE}:${IMAGE_TAG} ."
+                }
+            }
+        }
+
+        stage('Login to Docker Hub') {
+            steps {
+                script {
+                    withCredentials([string(credentialsId: 'DOCKERHUB-PAT', variable: 'DOCKERHUB_PAT')]) {
+                        sh "echo ${DOCKERHUB_PAT} | docker login -u ${DOCKERHUB_USERNAME} --password-stdin"
+                    }
+                }
+            }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                script {
+                    sh "docker push ${DOCKER_IMAGE}:${IMAGE_TAG}"
+                }
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                script {
+                    sh 'kubectl apply -f k8s.yaml'
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            cleanWs()
+        }
+        success {
+            echo 'Pipeline completed successfully!'
+        }
+        failure {
+            echo 'Pipeline failed!'
+        }
+    }
+}

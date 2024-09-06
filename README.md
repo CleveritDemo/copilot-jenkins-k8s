@@ -1,1 +1,0 @@
-# copilot-jenkins-k8s
