@@ -128,7 +128,7 @@ Ask GitHub Copilot Chat to provide instructions on how to create a pipeline on J
 
 ![pipeline](./images/pipeline.png)
 
-### Step 8: Create a repository on Jenkins
+### Step 8: Create a repository on GitHub
 
 Ask GitHub Copilot Chat to provide instructions on how to create a repository on GitHub:
 
@@ -136,10 +136,21 @@ Ask GitHub Copilot Chat to provide instructions on how to create a repository on
 
 ![github](./images/github.png)
 
-### Step 9: Update Jenkinsfile
+### Step 9: Create README.md
 
-### Step 10: Update Jenkinsfile
+Ask GitHub Copilot Chat to create a README.md with all instructions and command:
 
+> @workspace create a README.md with all information and instructions so anyone can take it and run the whole application
+
+![readme](./images/readme.png)
+
+### Step 10: Run a Pipeline on Jenkins
+
+Ask GitHub Copilot Chat to provide instructions to run a pipeline on Jenkins:
+
+> @workspace provide instructions on how to test application on Jenkins
+
+![jenkins-pipeline](./images/jenkins-pipeline.png)
 
 ---
 
