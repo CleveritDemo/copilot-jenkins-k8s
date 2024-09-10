@@ -76,6 +76,10 @@ Ask GitHub Copilot Chat to generate the project workspace:
 
 ![Create Workspace Screenshot](./images/new.png)
 
+Lets click on ***"Create Workspace"*** and then select the directory to create the files
+
+![Create Workspace Screenshot](./images/wk.png)
+
 ### Step 2: Generate the Jenkinsfile
 
 Use GitHub Copilot to generate the `Jenkinsfile`:
@@ -91,6 +95,51 @@ Ask GitHub Copilot Chat to update the `Jenkinsfile` to include Docker registry s
 > @workspace update the `Jenkinsfile`. The repository is: https://github.com/NicolasAndresCalvo/copilot-jenkins-k8s, and the Docker Registry to push the image is: `nicolasandrescalvo/copilot-jenkins-k8s`. Docker Credential is stored in Jenkins under this ID: `DOCKERHUB-PAT`.
 
 ![Update Jenkinsfile Screenshot](./images/cop-jenkins-2.png)
+
+### Step 4: Update K8S
+
+Ask GitHub Copilot Chat to update the `K8S` to include Docker Image and update Service Type:
+
+> @workspace Update k8s.yaml, i want the deployment to use an image that i am going to create and push in Docker Hub, the url should be: `nicolasandrescalvo/copilot-jenkins-k8s`. Service shoulb be ClusterIP, only accesible inside the cluster.
+
+![update-k8s](./images/update-k8s.png)
+
+### Step 5: Provide Commands to run app locally
+
+Ask GitHub Copilot Chat to provide commands to run app locally:
+
+> @workspace give me commands to run it locally. With Docker Desktop on Mac. Also to push it to my DockerHub Registry: nicolasandrescalvo/copilot-jenkins-k8s
+
+![commands-local](./images/commands-local.png)
+
+### Step 6: Provide Instructions for Jenkins Credential and Jenkinsfile
+
+Ask GitHub Copilot Chat to provide instructions on how to create a credential on Jenkins:
+
+> @workspace give me instructions on how to create a credential on Jenkins to store a Docker PAT, then its going to be used for my jenkinsfile, and should be named DOCKERHUB_PAT
+
+![jenkins-credential](./images/jenkins-credential.png)
+
+### Step 7: Create Pipeline on Jenkins
+
+Ask GitHub Copilot Chat to provide instructions on how to create a pipeline on Jenkins:
+
+> @workspace give me instructions on how to create a simple pipeline on Jenkins to make use of jenkinsfile, store in the repository https://github.com/NicolasAndresCalvo/copilot-jenkins-k8s.git on GitHub. Its a public repository
+
+![pipeline](./images/pipeline.png)
+
+### Step 8: Create a repository on Jenkins
+
+Ask GitHub Copilot Chat to provide instructions on how to create a repository on GitHub:
+
+> @workspace provide instructions on how to create a GitHub repository, a public. And give me commands to commit and push all files generated here
+
+![github](./images/github.png)
+
+### Step 9: Update Jenkinsfile
+
+### Step 10: Update Jenkinsfile
+
 
 ---
 
