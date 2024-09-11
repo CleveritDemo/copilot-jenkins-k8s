@@ -12,6 +12,8 @@ Ensure the following are installed on your machine:
 - [Kind](https://kind.sigs.k8s.io/) - Kubernetes in Docker
 - [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/) - Kubernetes command-line tool
 - [Jenkins](https://hub.docker.com/repository/docker/nicolasandrescalvo/jenkins/general) - For CI/CD pipelines
+- [GitHub Account](https://github.com/)
+- [DockerHub Account](https://hub.docker.com/)
 
 ---
 
