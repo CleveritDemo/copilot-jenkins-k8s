@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  jenkins:
+    build: .
+    image: jenkins-jdk-17-lts
+    container_name: jenkins
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - docker-certs:/certs/client
+    environment:
+      - DOCKER_HOST=tcp://dind:2376
+      - DOCKER_TLS_VERIFY=1
+      - DOCKER_CERT_PATH=/certs/client
+    depends_on:
+      - dind
+
+  dind:
+    image: docker:dind
+    container_name: dind-daemon
+    privileged: true
+    volumes:
+      - docker-vol:/var/lib/docker
+      - docker-certs:/certs/client
+    environment:
+      - DOCKER_TLS_CERTDIR=/certs
+
+volumes:
+  jenkins_home:
+  docker-vol:
+  docker-certs:
