@@ -1,253 +1,272 @@
-# DevOps optimizado con Kubernetes, Docker, Jenkins + GitHub Copilot 🤖
+# Optimized DevOps with Kubernetes, Docker, Jenkins + GitHub Copilot 🤖
 
-En este training, aprovecharemos el uso de GitHub copilot para construir un entorno de trabajo DevOps, que permita construir un flujo automatizado completo de principio a fin. Incorporando las mejores practicas del SDLC
+In this training, we will leverage GitHub Copilot to build a DevOps work environment that allows us to create a fully automated workflow from start to finish, incorporating the best practices of the SDLC.
 
-El objetivo consistira en levantar un entorno local con Jenkins y publicar una aplicacion web generada desde cero con GitHub Copilot hacia un Registry de Docker, con la finalidad de poder desplegar nuestra aplicación en un entorno local de Kubernetes.
+The goal is to set up a local environment with Jenkins and publish a web application generated from scratch with GitHub Copilot to a Docker Registry, with the aim of deploying our application in a local Kubernetes environment.
 
-## 🚧 Requerimientos Tecnicos.
+# Final Result
+The completed application developed in this practical exercise is located in this [public repository](https://github.com/CleveritDemo/copilot-static-web-demo-app/tree/solved). The final changes are in the `solved` branch.
 
-Los siguientes programas son **obligatorios** para completar este práctico.
+The application contains:
+- Source code of the website.
+- Kubernetes manifest.
+- Pipeline file `jenkinsfile`.
+- `Dockerfile`.
 
-1. [Docker](https://www.docker.com/products/docker-desktop): Se empleará como herramienta de ejecución de contenedores.
-2. [Kind](https://kind.sigs.k8s.io/): Herramienta para la creacion de clusters de kubernetes utilizando contenedores de docker.
-3. [Jenkins](https://www.jenkins.io/): Servidor de automatización open-source para construir, probar y desplegar aplicaciones.
-4. [GitHub](https://github.com/): Como herramienta de versionamiento de codigo y alojamiento de repositorios.
-5. [Docker Hub](https://hub.docker.com/): Servicio de alojamiento de imágenes de contenedores Docker.
-1. [NodeJS](https://nodejs.org): Entorno de ejecucion en el servidor para el lenguaje JavaScript.
+# Next Steps:
+## 🚧 Technical Requirements
 
-## 🛠️ 1. Configurando Jenkins localmente usando Docker.
+The following programs are **mandatory** to complete this practical exercise.
 
-- Abre una sesion de terminal en la carpeta `jenkins` localizada en este repositorio.
+1. [Docker](https://www.docker.com/products/docker-desktop): Used as a container execution tool.
+2. [Kind](https://kind.sigs.k8s.io/): Tool for creating Kubernetes clusters using Docker containers.
+3. [Jenkins](https://www.jenkins.io/): Open-source automation server for building, testing, and deploying applications.
+4. [GitHub](https://github.com/): Used for code versioning and repository hosting.
+5. [Docker Hub](https://hub.docker.com/): Service for hosting Docker container images.
+6. [NodeJS](https://nodejs.org): Server-side JavaScript runtime environment.
+
+## 🛠️ 1. Setting up Jenkins locally using Docker
+
+- Open a terminal session in the `jenkins` folder located in this repository.
     ```shell
-    cd "carpeta_del_repositorio/jenkins"
+    cd "repository_folder/jenkins"
     ```
 
-- Una vez abierta la terminal (Bash|Powershell), debes levantar el servicio de jenkins mediante docker compose, usando los siguientes comandos:
+- Once the terminal (Bash|Powershell) is open, start the Jenkins service using Docker Compose with the following commands:
     ```shell
-    docker compose build # Descarga las imagenes docker necesarias y contruye los contenedores.
+    docker compose build # Downloads the necessary Docker images and builds the containers.
 
-    docker compose up -d # Inicializa y levanta los contenedores de docker. Ejecuta la aplicacion de Jenkins. 
+    docker compose up -d # Initializes and starts the Docker containers. Runs the Jenkins application.
     ```
-- Extrae la constraseña de seguridad de jenkins. (Será necesaria para desbloquear jenkins y configurarlo). La constraseña puede ser extraida empleando el siguiente comando:
+- Extract the Jenkins security password (needed to unlock and configure Jenkins). The password can be extracted using the following command:
     ```shell
     docker exec jenkins cat /var/jenkins_home/secrets/initialAdminPassword
 
-    # El valor retornado sera un string similar a este:
+    # The returned value will be a string similar to this:
     # 3ef9768dafa8429c870e45b68d96d651
     ```
-- Abre el navegador y navega hasta la direccion: `http://localhost:8080`. Una vez alli introduce la clave de desbloqueo obtenida en el paso anterior.
+- Open your browser and navigate to: `http://localhost:8080`. Enter the unlock key obtained in the previous step.
     ![Jenkins Lock Screen](./images/jenkins.png).
 
-> Usuario Jenkins 💡:  
-Alternativamente jenkins pedira crear un usuario y contraseña para gestionar la herramienta. Es opcional para este practico pudiendo usarse el usuario administrador.
+> Jenkins User 💡:  
+Alternatively, Jenkins will ask to create a user and password to manage the tool. This is optional for this practical exercise, and the admin user can be used.
 
-## 🖥️ 2. Configurando Kubernetes localmente usando Kind.
-Lo primero que se debe hacer es crear un nuevo cluster utilizando Kind mediante el siguiente comando:
+## 🖥️ 2. Setting up Kubernetes locally using Kind
+
+First, create a new cluster using Kind with the following command:
 ```sh
 kind create cluster --name devops-demo
 ```
 
-Ahora lo siguiente es obtener el contexto del cluster, el contexto es un archivo que nos permitira conectarnos al api de control de nuestro cluster mediante la linea de comandos `kubectl`
+Next, obtain the cluster context, which is a file that allows us to connect to the cluster control API using the `kubectl` command line.
 
-Para ello ejecutamos el siguiente comando:
+Execute the following command:
 ```sh
 kubectl cluster-info --context kind-devops-demo
 ```
 
-Si queremos validar que el contexto ha sido configurado y que se encuentra activo, se puede verificar ejecutando el siguiente comando:
+To validate that the context has been configured and is active, you can verify by running the following command:
 ```sh
 kubectl config get-contexts
 ```
-Esto devolvera la una salida similar a la siguiente:
+This will return an output similar to the following:
 ```sh
 CURRENT   NAME               CLUSTER            AUTHINFO           NAMESPACE
 *         kind-devops-demo   kind-devops-demo   kind-devops-demo
 ```
-En caso de tener varios contextos, es importante verificar que el contexto `kind-devops-demo` se encuentre marcado con un asterisco (*).
+If you have multiple contexts, ensure that the `kind-devops-demo` context is marked with an asterisk (*).
 
-## 🚀 3. Creando repositorio en GitHub
-En este paso, crearemos un nuevo repositorio publico en nuestras personales de GitHub. El objetivo de este repositorio es alojar la aplicacion web que Copilot se encargara de generar por nosotros.
+## 🚀 3. Creating a repository on GitHub
 
-A su vez, usaremos este repositorio en nuestra instancia local de Jenkins y asi desplegar la aplicacion web.
+In this step, we will create a new public repository on our GitHub account. The purpose of this repository is to host the web application that Copilot will generate for us.
 
-Podemos indicar a GitHub Copilot que nos oriente con los pasos para crear un repositorio mediante el siguiente prompt:
+We will use this repository in our local Jenkins instance to deploy the web application.
 
-_Prompt de ejemplo:_
+We can ask GitHub Copilot to guide us through the steps to create a repository using the following prompt:
+
+_Example Prompt:_
 ```
-Puedes indicar los pasos necesarios para crear un nuevo repositorio publico en GitHub llamado "demo-solar-system-app" El repositorio debe contener un README y un gitignore. Que pasos debo segur.
+Can you provide the steps to create a new public repository on GitHub called "demo-solar-system-app"? The repository should contain a README and a .gitignore. What steps should I follow?
 ```
 
-**Debemos seguir las sugerencias indicadas por GitHub Copilot en este punto.**
+**Follow the suggestions provided by GitHub Copilot at this point.**
 
-Una vez completado este paso. Clonamos el repositorio creado en nuestro computador y abriremos el repositorio con visual estudio code.
+Once this step is completed, clone the created repository to your computer and open it with Visual Studio Code.
 
-## 🧑🏼‍💻 4. Creando aplicacion web de pruebas.
-En este paso crearemos una aplicacion web simple que servira como servicio de pruebas de este practico. Esta aplicacion la alojaremos en el repositorio de GitHub creado en el paso anterior.
+## 🧑🏼‍💻 4. Creating a test web application
 
-Utilizaremos las extensiones de GitHub Copilot, especificamente `@workspace` y tambien la caracteristica de `Copilot Edits` que permitira realizar cambios dinamicos a los archivos de nuestra aplicacion.
+In this step, we will create a simple web application that will serve as a test service for this practical exercise. This application will be hosted in the GitHub repository created in the previous step.
 
-> **RECOMENDACION** 🚧  
-> Para mejores resultados en la generacion de proyectos, utiliza @workspace /new con el modelo de: OpenAI O1 (Preview).
+We will use GitHub Copilot extensions, specifically `@workspace`, and the `Copilot Edits` feature to make dynamic changes to our application's files.
 
-**PROMPT A UTILIZAR:**
+> **RECOMMENDATION** 🚧  
+> For better project generation results, use @workspace /new with the OpenAI O1 (Preview) model.
+
+**PROMPT TO USE:**
 ```
-@workspace /new Quiero que construyas la estructura de un nuevo proyecto web para un sitio web estatico. El sitio consta de tres paginas principales: Index, About y Contact Us. El sitio web esta pensado para mostrar informacion del sistema solar y tiene como nombre: "app". Por lo que debes plasmar la informacion de los planetas que conforman el sistema solar: Mercurio, Venus, Tierra, Marte, Jupiter, Saturno, Urano y Neptuno. En algunas partes reconocen a pluton como planeta. Por lo tanto incluye informacion tambien de pluton. Y no puedes olvidar incluir al Sol y toda su informacion relevante. Eso ira en la pagina index. En la pagina de about us. Coloca que somos un pequeño grupo de personas aficionadas a la astronomia y tenemos como mision educar y transmitir informacion sobre los planetas. (En esta parte como modelo de IA debes generar contenido enriquecido y util). Y por ultimo en la pagina de Contact Us, crea un formulario de contacto que permita recolectar la siguiente informacion: Nombres, Apellidos, Correo Electronico, Pais, y un gran campo de texto que permita a los usuarios escribir sus anecdotas.
+@workspace /new I want you to build the structure of a new web project for a static website. The site consists of three main pages: Index, About, and Contact Us. The website is intended to display information about the solar system and is named "app". Therefore, you should include information about the planets that make up the solar system: Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, and Neptune. Some parts recognize Pluto as a planet, so include information about Pluto as well. Don't forget to include the Sun and all its relevant information on the index page. On the about us page, state that we are a small group of astronomy enthusiasts with a mission to educate and share information about the planets. (As an AI model, you should generate rich and useful content here). Finally, on the Contact Us page, create a contact form that collects the following information: First Name, Last Name, Email, Country, and a large text field for users to write their anecdotes.
 
-Este sitio web debe ser desarrollado utilizando HTML5, CSS3, JavaScript y utilizar la version mas reciente de Boostrap como libreria de estilos y componentes. Para aprovisionar este sitio web debes utilizar NodeJS con el framework de ExpressJS para asi aprovisionar y disponibilizar este sitio web estatico. Toda la estructura de esta aplicacion debes crearla dentro de una carpeta llamada "app" que debe ubicarse en el directorio raíz de este repositorio. Es muy importante que no repitas las paginas web es decir no generes dos veces la misma pagina y sobretodo, no olvides generar el archivo .gitignore para este proyecto.
+This website should be developed using HTML5, CSS3, JavaScript, and the latest version of Bootstrap as the style and component library. To provision this website, use NodeJS with the ExpressJS framework to serve and make this static website available. The entire structure of this application should be created within a folder called "app" located in the root directory of this repository. It is very important not to duplicate the web pages, i.e., do not generate the same page twice, and above all, do not forget to generate the .gitignore file for this project.
 ```
 
 **Troubleshooting: .gitignore**  
-Si el archivo `.gitignore` no es generado durante el uso del comando. Simplemente crea un nuevo archivo `.gitignore` dentro de la carpeta `app` y usando la combinacion de teclas `ctrl`+`i` en Windows ó `cmd`+`i` en MacOS, abriras el chat copilot "in-line". Escribe el siguiente prompt para que Copilot genere una estructura básica de .gitignore por ti.
+If the `.gitignore` file is not generated during the command execution, simply create a new `.gitignore` file inside the `app` folder and use the `ctrl`+`i` key combination on Windows or `cmd`+`i` on MacOS to open the Copilot chat "in-line". Write the following prompt for Copilot to generate a basic .gitignore structure for you.
 
-**PROMPT A UTILIZAR**
+**PROMPT TO USE**
 ```
-Agrega una estrctura basica de un archivo .gitignore
-```
-
-### Contenerizando la aplicacion
-Necesitamos ejecutar la aplicacion creada por copilot, para ello le pediremos al chat que nos ayude a crear un archivo Dockerfile. Este archivo contendra todas las dependencias necesarias para que podamos ejecutar la aplicacion, y tambien permitira que podamos deployarla posteriormente en el cluster de Kubernetes creado anteriormente.
-
-_Prompt para contenerizar la aplicacion:_
-```
-@workspace Construye un archivo Dockerfie que permita deployar el sitio web estatico que se encuentra dentro de la carpeta "app" #file:server.js
+Add a basic structure for a .gitignore file
 ```
 
-1. Crea un nuevo archivo `Dockerfile`
-2. Copia la sugerencia de copilot en el archivo Dockerfile.
-3. Guarda los cambios.
+### Containerizing the application
 
-### Ejecutando la aplicacion
-Para probar la aplicacion consultaremos con copilot que comandos necesitamos para construir la imagen docker y ejecutar la aplicacion web mediante el siguiente prompt.
+We need to run the application created by Copilot, so we will ask the chat to help us create a Dockerfile. This file will contain all the necessary dependencies to run the application and will also allow us to deploy it later in the Kubernetes cluster created earlier.
 
-**PROMPT A UTILIZAR**
+_Prompt to containerize the application:_
 ```
-@workspace Que comandos Docker necesito para construir y ejecutar mi aplicacion web declarada en el siguiente Dockerfile #file:Dockerfile
+@workspace Build a Dockerfile to deploy the static website located in the "app" folder #file:server.js
 ```
 
-Copilot muy probablemente sugerirá los siguientes comandos:
+1. Create a new `Dockerfile`.
+2. Copy Copilot's suggestion into the Dockerfile.
+3. Save the changes.
+
+### Running the application
+
+To test the application, we will ask Copilot for the commands needed to build the Docker image and run the web application using the following prompt.
+
+**PROMPT TO USE**
+```
+@workspace What Docker commands do I need to build and run my web application declared in the following Dockerfile #file:Dockerfile
+```
+
+Copilot will most likely suggest the following commands:
 ```sh
-docker build -t solar-system-app:latest . # Construye la imagen docker en nuestro computador de forma local
+docker build -t solar-system-app:latest . # Builds the Docker image locally on our computer
 
-docker run -p 3000:3000 --name solar-system-website solar-system-app:latest # Crea y ejecuta un contenedor levantando el sitio web
+docker run -p 3000:3000 --name solar-system-website solar-system-app:latest # Creates and runs a container, launching the website
 ```
 
-## 🔧 5. Creando  el archivo jenkinsfile
-Dentro del repositorio de la aplicacion web, debemos crear un archivo `jenkinsfile` el cual contendra el codigo y la definicion del pipeline que emplearemos dentro de Jenkins.
+## 🔧 5. Creating the Jenkinsfile
 
-_Prompt para crear el jenkinsfile:_
+Within the web application repository, we need to create a `jenkinsfile` that will contain the code and definition of the pipeline we will use in Jenkins.
+
+_Prompt to create the Jenkinsfile:_
 ```
-@workspace Crea un archivo jenkins file que permita construir y publicar la imagen docker de esta aplicacion web. El pipeline debe incluir las etapas de instalacion de dependencias, empaquetado de la imagen de docker y entrega de la misma en un container registry. Como registry estaremos usando Docker Hub, por lo que debes incluir el uso de credenciales en los pasos de docker. #file:Dockerfile
-```
-
-Con esto copilot sugerira una estructura de pipeline base la cual modificaremos un poco mas adelante.
-
-## 🖥️ 6. Creando manifiesto de kubernetes (Deploment)
-Usando GitHub Copilot, solicitaremos la creacion del manifiesto de kubernetes que utilizaremos para despleagar la aplicacion web dentro del cluster que hemos generado anteriormente. Mediante el siguiente prompt:
-
-_Prompt: Manifiesto de kubernetes:_
-```
-@workspace Crea un archivo k8s.yaml. Este manifiesto de kubernetes debe contener un deployment de la imagen docker que creamos anteriormente #file:Dockerfile y debe coincidir con la URL del repositorio docker en #file:jenkinsfile. Cluster IP debe implementarse como un servicio y esta aplicación web debe ser accesible solo internamente.
+@workspace Create a Jenkinsfile to build and publish the Docker image of this web application. The pipeline should include stages for dependency installation, Docker image packaging, and delivery to a container registry. We will use Docker Hub as the registry, so include the use of credentials in the Docker steps. #file:Dockerfile
 ```
 
-Al ejecutar este prompt Copilot sugerira la estructura YAML necesaria para ejecutar el deployment.
+With this, Copilot will suggest a basic pipeline structure that we will modify later.
 
-El codigo sugerido lo guardaremos en un nuevo archivo llamado `k8s.yaml` el cual crearemos en la raiz del repositorio.
+## 🖥️ 6. Creating Kubernetes manifest (Deployment)
 
-## ⚡ 7. Configurando Docker Registry.
+Using GitHub Copilot, we will request the creation of the Kubernetes manifest that we will use to deploy the web application within the cluster we created earlier. Use the following prompt:
 
-Lo primero que configuraremos en este apartado es nuestro Docker Registry o Container Registry, el cual servira de repositorio de almacenamiento para la imagen Docker de nuestra aplicacion web. Para ello utilizaremos **Docker Hub**. Utilizando github copilot consultaremos como podemos utilizar docker hub con nuestro repositorio de Docker.
-
-Para realizar estas modificaciones emplearemos **GitHub Copilot Edits**. Una caracteristica de GitHub Copilot que permite modificar varios archivos de un espacio de trabajo simultaneamente.
-
-Es importante recalcar que agregaremos al "working set" se Copilot Edits los archivos de `jenkinsfile`
-
+_Prompt: Kubernetes manifest:_
 ```
- Quiero configurar mi cuenta de Docker Hub como repositorio de imagenes de docker. Modifica el archivo jenkins y el archivo de deployment de kubernetes para que incluyan el siguiente usuario de Docker Hub en la ruta de la imagen docker resultado de la siguiente manera: macmoi/solar-system-app:latest
+@workspace Create a k8s.yaml file. This Kubernetes manifest should contain a deployment of the Docker image we created earlier #file:Dockerfile and should match the Docker repository URL in #file:jenkinsfile. Cluster IP should be implemented as a service, and this web application should only be accessible internally.
 ```
 
-Copilot realizara modificacion dentro de los archivos `jenkinsfile` y `k8s.yaml` modificando concretamente las lineas de codigo en donde indicamos la ruta de la imagen en el repositorio. Esto permitira configurar de forma correcta nuestro usuario de docker
+Executing this prompt, Copilot will suggest the necessary YAML structure for the deployment.
 
-> 🚧 **Importante: Usuario Docker**  
-> En este ejemplo, se emplea un usuario docker de pruebas. Ese usuario para ejecuciones particulares debe sustituirse por su propio usuario. Ejemplo: Para un usuario llamado `prueba` la ruta de la imagen resultaria en: `prueba/solar-system-app:latest`
+Save the suggested code in a new file called `k8s.yaml` in the root of the repository.
 
-## ☁️ 8. Subiendo los cambios al repositorio.
-Una vez realizadas todas las configuraciones y modificaciones necesarias a la aplicacion, procedemos a subir los cambios al repositorio Git creado anteriormente.
+## ⚡ 7. Configuring Docker Registry
 
-Para ello simplemente ejecutamos los siguientes comandos:
+First, we will configure our Docker Registry or Container Registry, which will serve as the storage repository for the Docker image of our web application. We will use **Docker Hub**. Using GitHub Copilot, we will ask how to use Docker Hub with our Docker repository.
+
+To make these modifications, we will use **GitHub Copilot Edits**, a feature of GitHub Copilot that allows modifying multiple files in a workspace simultaneously.
+
+It is important to add the `jenkinsfile` and `k8s.yaml` files to the Copilot Edits working set.
+
+```
+I want to configure my Docker Hub account as a Docker image repository. Modify the Jenkins file and the Kubernetes deployment file to include the following Docker Hub user in the Docker image path as follows: macmoi/solar-system-app:latest
+```
+
+Copilot will make modifications within the `jenkinsfile` and `k8s.yaml` files, specifically changing the lines of code where we indicate the image path in the repository. This will correctly configure our Docker user.
+
+> 🚧 **Important: Docker User**  
+> In this example, a test Docker user is used. For personal executions, replace this user with your own. Example: For a user named `test`, the image path would be: `test/solar-system-app:latest`
+
+## ☁️ 8. Pushing changes to the repository
+
+Once all configurations and modifications to the application are completed, we proceed to push the changes to the created Git repository.
+
+Simply execute the following commands:
 
 ```sh
-git status # Verificamos el estado actual de la rama.
-git add . # Agregamos todos los cambios realizados.
-git commit -m "Primeros cambios" # Registramos una incorporacion de cambios
-git push # Se suben los cambios al repositorio de Git
+git status # Check the current branch status.
+git add . # Add all changes made.
+git commit -m "Initial changes" # Record a change incorporation
+git push # Push the changes to the Git repository
 ```
-> 🎯 **Nota:** **Incorporaciones**
-> Es posible que dependiendo del metodo de autenticacion de sus repositorios,
-> se solicite una key o en su lugar configurar SSH para asi autenticarse, en ese caso,
-> deben seguir los pasos de su herramienta de control de versiones para autenticarse.
-> En el caso de GitHub por ejemplo estos son los pasos:
-> [Crear un nuevo par de claves SSH](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent) y 
-> [agregar clave SSH a cuenta GitHub](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account)
+> 🎯 **Note:** **Incorporations**
+> Depending on your repository's authentication method, you may be asked for a key or to configure SSH for authentication. In that case, follow your version control tool's steps for authentication.
+> For GitHub, for example, these are the steps:
+> [Create a new SSH key pair](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent) and 
+> [add SSH key to GitHub account](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account)
 
-## 🔨 9. Configuracion de Pipeline Jenkins y GitHub
-En este punto utilizaremos GitHub copilto como asistente de ayuda para que nos guie en la configuracion de un nuevo pipeline en Jenkins mediante el siguiente prompt.
+## 🔨 9. Configuring Jenkins Pipeline and GitHub
+
+At this point, we will use GitHub Copilot as an assistant to guide us in configuring a new pipeline in Jenkins using the following prompt.
 
 ```
-@workspace Necesito que proporciones los pasos necesarios para configurar esta aplicacion en un pipeline automatizado de Jenkins #file:jenkinsfile
+@workspace I need you to provide the steps to configure this application in an automated Jenkins pipeline #file:jenkinsfile
 ```
 
-Posteriormente a esto GitHub Copilot sugerira los pasos para crear un nuevo Pipeline en Jenkins. En caso de tener problemas se sugiere revisar los pasos del siguiente troubleshooting.
+After this, GitHub Copilot will suggest the steps to create a new Pipeline in Jenkins. If you encounter issues, it is recommended to review the steps in the following troubleshooting.
 
-> **IMPORTANTE**  
-> Es necesario que se revise si se dispone de los plugins de Docker y de NodeJS instalados al momento de crear el pipeline. En caso de no tenerlos instalados podemos hacerlo yendo directamente a las configuraciones de plugins de Jenkins y alli buscar el plugin de NodeJS y Docker, seleccionarlos e instalarlos.  
-> Tambien es necesario configurar el Tool para tener NodeJS habilitado y disponible para su uso en los pipelines. Los pasos de configuracion de esto los pueden seguir revisando esta guia: [Configuracion NodeJS](https://plugins.jenkins.io/nodejs/)
+> **IMPORTANT**  
+> Ensure that the Docker and NodeJS plugins are installed when creating the pipeline. If not installed, go to Jenkins plugin configurations, search for the NodeJS and Docker plugins, select and install them.  
+> Also, configure the Tool to have NodeJS enabled and available for use in the pipelines. Follow the steps in this guide: [NodeJS Configuration](https://plugins.jenkins.io/nodejs/)
 
-## 🚀 10. Despliegue en ambiente local utilizando Kind.
-En este paso, utilizaremos a GitHub Copilot para que nos indique los pasos para desplegar nuestra aplicacion de forma local. Para ello utilizaremos el siguiente prompt:
+## 🚀 10. Deploying in a local environment using Kind
+
+In this step, we will use GitHub Copilot to guide us through the steps to deploy our application locally. Use the following prompt:
 
 _Prompt:_
 ```
-@workspace Quiero que indiques los pasos para desplegar correctamente este manifiesto deployment de kubernetes en mi cluster local creado con Kind. Esta aplicacion debe poder consumirse desde mi computador local.
+@workspace I want you to provide the steps to correctly deploy this Kubernetes deployment manifest in my local cluster created with Kind. This application should be accessible from my local computer.
 ```
 
-En este punto copilot sugerira los pasos a seguir y entregará los comandos de Kubectl necesarios para ejecutar el despliegue.
+At this point, Copilot will suggest the steps to follow and provide the necessary Kubectl commands to execute the deployment.
 
 ```sh
-# Comandos sugeridos por Copilot.
+# Commands suggested by Copilot.
 
-kubectl apply -f app/k8s.yaml # Aplica el manifiesto de Kuberentes dentro del cluster
-kubectl get deployments # Permite visualizar los despliegues
-kubectl get services # Permite visualizar los servicios.
+kubectl apply -f app/k8s.yaml # Applies the Kubernetes manifest in the cluster
+kubectl get deployments # Displays the deployments
+kubectl get services # Displays the services
 ```
 
-Para poder acceder de forma local desde nuestro navegador hacia la aplicacion es necesario hacer un mapeo de puertos por ello le pediremos a copilot que nos indique el comando de "port forwarding" que realizara esta tarea.
+To access the application locally from our browser, we need to map ports. We will ask Copilot to provide the "port forwarding" command to perform this task.
 
 _Prompt_
 ```
-@workspace necesito acceder desde mi navegador a mi aplicacion web desplegada usando el manifiesto #file:k8s.yaml Indica el comando de port forwarding que debo ejecutar para que mi aplicacion quede disponible y accesible desde mi navegador web en mi maquina loca. Recuerda que estoy ejecutando esto desde KIND
+@workspace I need to access my web application deployed using the manifest #file:k8s.yaml from my local computer. Provide the port forwarding command I need to execute to make my application available and accessible from my web browser on my local machine. Remember, I am running this from KIND.
 ```
 
-Copilot sugerira muy probablemente el siguiente comando:
+Copilot will most likely suggest the following command:
 
 ```sh
 kubectl port-forward service/app-service 3000:3000
 ```
 
-Una vez ejecutado ese comando, podemos acceder a la aplicacion desde nuestro navegador usando la siguiente URL: http://localhost:3000
+Once this command is executed, we can access the application from our browser using the following URL: http://localhost:3000
 
-> **IMPORTANTE**  
-> Si el comando de port forwarding no puede mapear el puerto 3000, verificar si el puerto esta siendo utilizado por otra aplicacion, o simplemente cambiar el valor del puerto a mapear por algun otro valor.
+> **IMPORTANT**  
+> If the port forwarding command cannot map port 3000, check if the port is being used by another application, or simply change the port value to another one.
 
-## 🗑️ 11. Limpiando recursos.
-Felicidades has alcanzado el final de este ejercicio practico. Con los siguientes comandos puedes eliminar los recursos utilizados en tu computador
+## 🗑️ 11. Cleaning up resources
 
-### Destruir los recursos de Docker Compose
+Congratulations, you have reached the end of this practical exercise. Use the following commands to remove the resources used on your computer.
+
+### Destroy Docker Compose resources
 ```sh
-docker compose down -v # Eliminara los contenedores de docker y sus volumenes (NO REVERSIBLE).
+docker compose down -v # Removes Docker containers and their volumes (NOT REVERSIBLE).
 ```
 
-### Destruir el cluster local de Kubernetes.
+### Destroy the local Kubernetes cluster
 ```sh
-kind get clusters # Obtiene el listado de clusters disponibles.
-kind delete clusters "copilot-devops-demo" # Elmina el cluster utilizado en este ejercicio
+kind get clusters # Lists available clusters.
+kind delete clusters "copilot-devops-demo" # Deletes the cluster used in this exercise
 ```
