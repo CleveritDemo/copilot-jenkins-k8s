@@ -189,9 +189,65 @@ git push # Se suben los cambios al repositorio de Git
 > [Crear un nuevo par de claves SSH](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent) y 
 > [agregar clave SSH a cuenta GitHub](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account)
 
-## Configuracion de Pipeline Jenkins y GitHub
+## 🔨 9. Configuracion de Pipeline Jenkins y GitHub
 En este punto utilizaremos GitHub copilto como asistente de ayuda para que nos guie en la configuracion de un nuevo pipeline en Jenkins mediante el siguiente prompt.
 
 ```
 @workspace Necesito que proporciones los pasos necesarios para configurar esta aplicacion en un pipeline automatizado de Jenkins #file:jenkinsfile
+```
+
+Posteriormente a esto GitHub Copilot sugerira los pasos para crear un nuevo Pipeline en Jenkins. En caso de tener problemas se sugiere revisar los pasos del siguiente troubleshooting.
+
+> **IMPORTANTE**  
+> Es necesario que se revise si se dispone de los plugins de Docker y de NodeJS instalados al momento de crear el pipeline. En caso de no tenerlos instalados podemos hacerlo yendo directamente a las configuraciones de plugins de Jenkins y alli buscar el plugin de NodeJS y Docker, seleccionarlos e instalarlos.  
+> Tambien es necesario configurar el Tool para tener NodeJS habilitado y disponible para su uso en los pipelines. Los pasos de configuracion de esto los pueden seguir revisando esta guia: [Configuracion NodeJS](https://plugins.jenkins.io/nodejs/)
+
+## 🚀 10. Despliegue en ambiente local utilizando Kind.
+En este paso, utilizaremos a GitHub Copilot para que nos indique los pasos para desplegar nuestra aplicacion de forma local. Para ello utilizaremos el siguiente prompt:
+
+_Prompt:_
+```
+@workspace Quiero que indiques los pasos para desplegar correctamente este manifiesto deployment de kubernetes en mi cluster local creado con Kind. Esta aplicacion debe poder consumirse desde mi computador local.
+```
+
+En este punto copilot sugerira los pasos a seguir y entregará los comandos de Kubectl necesarios para ejecutar el despliegue.
+
+```sh
+# Comandos sugeridos por Copilot.
+
+kubectl apply -f app/k8s.yaml # Aplica el manifiesto de Kuberentes dentro del cluster
+kubectl get deployments # Permite visualizar los despliegues
+kubectl get services # Permite visualizar los servicios.
+```
+
+Para poder acceder de forma local desde nuestro navegador hacia la aplicacion es necesario hacer un mapeo de puertos por ello le pediremos a copilot que nos indique el comando de "port forwarding" que realizara esta tarea.
+
+_Prompt_
+```
+@workspace necesito acceder desde mi navegador a mi aplicacion web desplegada usando el manifiesto #file:k8s.yaml Indica el comando de port forwarding que debo ejecutar para que mi aplicacion quede disponible y accesible desde mi navegador web en mi maquina loca. Recuerda que estoy ejecutando esto desde KIND
+```
+
+Copilot sugerira muy probablemente el siguiente comando:
+
+```sh
+kubectl port-forward service/app-service 3000:3000
+```
+
+Una vez ejecutado ese comando, podemos acceder a la aplicacion desde nuestro navegador usando la siguiente URL: http://localhost:3000
+
+> **IMPORTANTE**  
+> Si el comando de port forwarding no puede mapear el puerto 3000, verificar si el puerto esta siendo utilizado por otra aplicacion, o simplemente cambiar el valor del puerto a mapear por algun otro valor.
+
+## 🗑️ 11. Limpiando recursos.
+Felicidades has alcanzado el final de este ejercicio practico. Con los siguientes comandos puedes eliminar los recursos utilizados en tu computador
+
+### Destruir los recursos de Docker Compose
+```sh
+docker compose down -v # Eliminara los contenedores de docker y sus volumenes (NO REVERSIBLE).
+```
+
+### Destruir el cluster local de Kubernetes.
+```sh
+kind get clusters # Obtiene el listado de clusters disponibles.
+kind delete clusters "copilot-devops-demo" # Elmina el cluster utilizado en este ejercicio
 ```
