@@ -22,6 +22,7 @@ services:
     image: docker:dind
     container_name: dind-daemon
     privileged: true
+    hostname: dind
     volumes:
       - docker-vol:/var/lib/docker
       - docker-certs:/certs/client
